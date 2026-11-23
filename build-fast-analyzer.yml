@@ -1,0 +1,42 @@
+name: Build V15 FAST Analyzer EXE
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-fast.txt
+
+      - name: Run self-test
+        shell: pwsh
+        run: python SELF_TEST_FAST_ANALYZER.py
+
+      - name: Build Windows EXE
+        shell: pwsh
+        run: python -m PyInstaller --noconfirm --clean V15_FAST_ANALYZER.spec
+
+      - name: Smoke-test EXE
+        shell: pwsh
+        run: dist\V15_FAST_ANALYZER.exe --help
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: V15_FAST_ANALYZER_WINDOWS
+          path: dist/V15_FAST_ANALYZER.exe
+          if-no-files-found: error
+          retention-days: 14
